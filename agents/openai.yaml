@@ -1,0 +1,4 @@
+interface:
+  display_name: "SKN Image2PPT"
+  short_description: "Hybrid Image2PPT reconstruction with Polish Pass"
+  default_prompt: "Use skn-image2ppt to convert this reference image into a high-fidelity editable PPTX, then run a Polish Pass against the reference to remove visible ghosting, duplication, alignment, icon, border, and background-edge issues."
