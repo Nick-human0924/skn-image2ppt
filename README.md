@@ -1,107 +1,67 @@
 # SKN Image2PPT
 
-SKN Image2PPT is a Codex skill and reconstruction protocol for turning AI-generated slide images, PPT screenshots, posters, infographics, and other flat reference images into editable PowerPoint files.
+## 中文说明
 
-It is designed for a common Image2 workflow problem: Image2 or other image-generation models can create visually strong slide images, but those images are not directly editable as PPT. SKN Image2PPT provides a hybrid method to preserve the visual quality of the generated image while rebuilding the business-critical content as editable PowerPoint objects.
+SKN Image2PPT 是一个专门解决 **Image2 / AI 生图结果无法直接转成可编辑 PPT** 问题的 Codex skill 和重建协议。
 
-## Core Idea
+很多 Image2、GPT 生图、PPT 截图或海报生成工具可以产出视觉效果很好的页面图片，但这些图片通常只是 PNG/JPEG：文字不能编辑，数字不能更新，表格、图标、标签和图表都被烘焙进像素里。直接把整张图贴进 PowerPoint 只能保留外观，不能满足后续修改；如果把所有元素都强行用 PPT 原生形状重画，又容易损失原图质感。
 
-Do not choose between a static screenshot and a simplified editable redraw.
-
-SKN Image2PPT uses a hybrid reconstruction approach:
-
-- Complex visual modules are preserved as high-fidelity visual assets.
-- Titles, numbers, labels, bullets, tables, and chart labels are rebuilt as editable PowerPoint objects.
-- Layout and asset decisions are recorded in manifest/layout metadata.
-- A final Polish Pass removes visible defects such as ghosting, duplicated lines, alignment drift, inconsistent icons, and hard-edged image assets.
-
-The target is:
+SKN Image2PPT 的核心思想是 **高保真混合重建**：
 
 ```text
-high visual fidelity
+复杂视觉资产高保真保留
 +
-business-critical editability
+核心业务内容可编辑重建
 +
-reproducible manifest-driven PPT generation
+manifest / layout 驱动 PPT 生成
 +
-final reference-overlay polish
+Polish Pass 最终精修
 ```
 
-## What Problem This Solves
+### 适用场景
 
-Image-generation tools can produce slide-like images with strong visual quality, but the output is usually a flat PNG/JPEG. That creates practical problems:
+- Image2 生成了一张 PPT 风格图片，需要变成真正的 `.pptx`。
+- 只有 PPT 截图，但希望还原成可编辑 PPT。
+- 需要把商业计划书、咨询页、医药 BP、路线图、战略页、信息图转成可维护 PPT。
+- 希望保留原图视觉质感，同时让标题、数字、标签、要点、表格和图表标签可编辑。
 
-- text cannot be edited
-- numbers cannot be updated
-- tables and labels are baked into pixels
-- logos, icons, and charts are hard to reuse
-- rebuilding everything as native PPT shapes often destroys visual quality
-- pasting the whole image into PowerPoint does not solve editability
+### 处理原则
 
-SKN Image2PPT addresses this by separating the slide into editable business content and high-fidelity visual assets.
+SKN Image2PPT 不追求“所有像素都可编辑”，而是按元素类型决策：
 
-## Reconstruction Philosophy
-
-The skill does not try to make every pixel editable. Instead, it classifies every element by two dimensions:
-
-- how important it is to edit later
-- how important it is to preserve visually
-
-Recommended treatment:
-
-| Element | Treatment |
+| 元素 | 推荐处理 |
 | --- | --- |
-| Main title, subtitle, bullets | editable PPT text |
-| Numbers, labels, assumptions | editable PPT text/table/chart |
-| Cards, dividers, badges | native PPT shapes |
-| Simple charts | rebuild as native PPT/SVG/chart as a whole |
-| Complex flywheel/map/mechanism diagram | SVM visual base + editable overlays |
-| Logo, texture, illustration, photo | high-fidelity visual asset |
-| Background glow/wave | transparent PNG/SVG or clean background asset |
+| 标题、副标题、正文、要点 | PPT 可编辑文本 |
+| 数字、标签、表格、图表标签 | PPT 文本 / 表格 / 图表 |
+| 卡片、分割线、徽章、阶段条 | PPT 原生形状 |
+| 简单图表 | 整体用 PPT/SVG/native chart 重建 |
+| 飞轮、地图、机制图等复杂模块 | SVM 视觉底座 + 可编辑覆盖层 |
+| Logo、纹理、插画、照片 | 高保真图片或 SVG 资产 |
+| 背景光效、波浪 | 透明 PNG / SVG / 干净背景资产 |
 
-## SVM: Semantic Visual Module
+### SVM 语义视觉模块
 
-An SVM is a complex visual module such as a flywheel, funnel, map, timeline, or mechanism diagram.
+SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂模块。它把复杂几何、渐变、阴影、遮挡关系保留为高保真视觉底座，再把业务文字、编号、标签作为可编辑 PPT 对象覆盖上去。
 
-For SVMs, SKN Image2PPT keeps a high-fidelity text-free visual base and overlays editable PowerPoint text for business content.
+这样可以避免两个极端：
 
-Example:
+- 整页截图，完全不可编辑。
+- 全部用 PPT shape 重画，视觉质量明显下降。
 
-```text
-flywheel_visual_base.png
-+
-editable center title
-+
-editable segment labels
-+
-editable bullet lists
-+
-editable number badges
-```
+### Polish Pass 精修
 
-This avoids the two bad extremes:
+V6.1 增加了 Polish Pass，用来处理初稿已经接近原图后仍然肉眼可见的小问题：
 
-- flattening the entire slide into one screenshot
-- redrawing complex visuals as crude PPT primitives
+- 文字重影或底图文字残留
+- 重复线条、重复圆点、重复图标
+- 坐标、字号、行距轻微偏移
+- 圆角、边框、阴影不统一
+- 图标像 emoji 或占位符
+- 背景资产有白底、硬边、矩形裁切感
 
-## Polish Pass
+Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原图，但最终交付前必须隐藏或删除参考层。
 
-Version 6.1 adds a final Polish Pass. This is a lightweight production step after the editable draft has been generated.
-
-The Polish Pass fixes the defects that are still obvious by eye:
-
-- text ghosting from baked text plus editable overlay text
-- duplicated connector lines, dots, icons, or labels
-- small x/y alignment drift
-- inconsistent border, radius, shadow, or icon style
-- hard rectangular crop edges in background assets
-- text size, wrapping, or line spacing mismatch
-
-The Polish Pass may use a temporary reference overlay at 30%-50% opacity, but the overlay must be hidden or removed before final delivery.
-
-## Output Structure
-
-A typical project should produce:
+### 典型输出
 
 ```text
 project_slug/
@@ -129,40 +89,34 @@ project_slug/
       quality_report.md
 ```
 
-## Deliverables
-
-For each conversion, the expected deliverables are:
-
-- editable PPTX
-- asset folder or asset package
-- layout/manifest JSON
-- preview PNG
-- diff overlay PNG
-- polish report
-- quality report
-
-## Usage Prompt
-
-Example prompt:
+### 示例 Prompt
 
 ```text
-Use skn-image2ppt to convert this reference slide image into a high-fidelity editable PPTX.
-Keep titles, numbers, labels, bullets, tables, and chart labels editable.
-Preserve complex visuals as high-fidelity assets or SVM visual bases.
-Run a Polish Pass to remove ghosting, duplication, alignment drift, icon inconsistency, and background crop edges.
-Output the PPTX, assets folder, layout JSON, preview, diff overlay, and polish report.
+使用 skn-image2ppt，把这张参考图转换成高保真、可编辑的 PPTX。
+标题、数字、标签、要点、表格和图表标签必须保持可编辑。
+复杂视觉模块可以保留为高保真视觉资产或 SVM 视觉底座。
+生成后执行 Polish Pass，清理重影、重复元素、对齐偏差、图标不统一和背景硬边问题。
+输出 PPTX、资产文件夹、layout JSON、预览图、diff overlay 和 polish report。
 ```
 
-## Relationship to bggg-creator-image2ppt
+---
 
-This skill can use `bggg-creator-image2ppt` as the deterministic PPTX compiler. The V6.1 protocol adds a stronger production workflow around it:
+## English
 
-- richer element classification
-- SVM visual modules
-- polish metadata
-- reference overlay pass
-- two-stage quality scoring
-- final visual cleanliness checklist
+SKN Image2PPT is a Codex skill and reconstruction protocol for turning AI-generated slide images, PPT screenshots, posters, infographics, and other flat reference images into editable PowerPoint files.
+
+It is designed for a common Image2 workflow problem: Image2 or other image-generation models can create visually strong slide images, but those images are not directly editable as PPT. SKN Image2PPT provides a hybrid method to preserve the visual quality of the generated image while rebuilding the business-critical content as editable PowerPoint objects.
+
+## Core Idea
+
+Do not choose between a static screenshot and a simplified editable redraw.
+
+SKN Image2PPT uses a hybrid reconstruction approach:
+
+- Complex visual modules are preserved as high-fidelity visual assets.
+- Titles, numbers, labels, bullets, tables, and chart labels are rebuilt as editable PowerPoint objects.
+- Layout and asset decisions are recorded in manifest/layout metadata.
+- A final Polish Pass removes visible defects such as ghosting, duplicated lines, alignment drift, inconsistent icons, and hard-edged image assets.
 
 ## Status
 
