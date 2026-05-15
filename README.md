@@ -61,6 +61,28 @@ V6.1 增加了 Polish Pass，用来处理初稿已经接近原图后仍然肉眼
 
 Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原图，但最终交付前必须隐藏或删除参考层。
 
+## 生图模型策略
+
+如果需要生成或清理组件图片、去文字背景、生成透明图标、生成 SVM 视觉底图，优先使用可明确指定模型的 OpenAI Images API，而不是依赖不透明的内置生图工具。
+
+当前建议配置：
+
+```json
+{
+  "generation_backend": "openai_images_api",
+  "primary_model": "gpt-image-1.5",
+  "chatgpt_alignment_model": "chatgpt-image-latest",
+  "transparent_asset_strategy": "api_transparency_or_postprocess_alpha"
+}
+```
+
+说明：
+
+- Codex 内置 `imagegen` 不暴露模型选择，也不会返回后端模型名，所以只能在报告中标记为 `unknown_builtin_imagegen`。
+- 截至 2026-05-15 官方文档检查，OpenAI 文档里的 GPT Image 模型包括 `gpt-image-1.5`、`gpt-image-1`、`gpt-image-1-mini` 等；不要在 skill 里硬写未确认的 `gpt-image-2`。
+- 如果用户明确要求“image2”，应先核对当前官方模型列表，再决定是否切换 `image_model_config.example.json`。
+- 透明素材优先使用 API 支持的透明输出；如果当前路径不支持，就用纯色/高对比背景生成，再做 alpha 或背景移除后处理。
+
 ### 典型输出
 
 ```text
@@ -78,6 +100,7 @@ project_slug/
       layout_v6.json
       asset_metadata.json
       polish_manifest.json
+      image_model_config.json
     07_output/
       editable_draft.pptx
       editable_reconstruction.pptx
@@ -95,6 +118,7 @@ project_slug/
 使用 skn-image2ppt，把这张参考图转换成高保真、可编辑的 PPTX。
 标题、数字、标签、要点、表格和图表标签必须保持可编辑。
 复杂视觉模块可以保留为高保真视觉资产或 SVM 视觉底座。
+如需生成或清理组件图片，优先使用 image_model_config.example.json 中定义的 OpenAI Images API 模型策略。
 生成后执行 Polish Pass，清理重影、重复元素、对齐偏差、图标不统一和背景硬边问题。
 输出 PPTX、资产文件夹、layout JSON、预览图、diff overlay 和 polish report。
 ```
@@ -117,7 +141,22 @@ SKN Image2PPT uses a hybrid reconstruction approach:
 - Titles, numbers, labels, bullets, tables, and chart labels are rebuilt as editable PowerPoint objects.
 - Layout and asset decisions are recorded in manifest/layout metadata.
 - A final Polish Pass removes visible defects such as ghosting, duplicated lines, alignment drift, inconsistent icons, and hard-edged image assets.
+- Generated assets use an explicit image model policy when OpenAI Images API access is available.
+
+## Image Model Policy
+
+For generated or cleaned component assets, prefer explicit OpenAI Images API configuration.
+
+Recommended default:
+
+- primary model: `gpt-image-1.5`
+- ChatGPT-aligned option: `chatgpt-image-latest`, when available
+- cost fallback: `gpt-image-1-mini`
+- legacy fallback: `gpt-image-1`
+- Codex built-in `imagegen`: fallback only, reported as `unknown_builtin_imagegen`
+
+Do not hard-code `gpt-image-2` unless the current official OpenAI docs or target runtime explicitly expose that model.
 
 ## Status
 
-This repository contains the skill instructions and protocol reference. It is intended to be used by Codex or another capable agent that can inspect images, generate or extract assets, produce manifest/layout JSON, and build PowerPoint files.
+This repository contains the skill instructions, protocol reference, and model configuration example. It is intended to be used by Codex or another capable agent that can inspect images, generate or extract assets, produce manifest/layout JSON, and build PowerPoint files.
