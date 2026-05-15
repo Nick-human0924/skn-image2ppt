@@ -70,7 +70,7 @@ Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原�
 ```json
 {
   "generation_backend": "openai_images_api",
-  "primary_model": "gpt-image-1.5",
+  "primary_model": "gpt-image-2",
   "chatgpt_alignment_model": "chatgpt-image-latest",
   "transparent_asset_strategy": "api_transparency_or_postprocess_alpha"
 }
@@ -79,9 +79,9 @@ Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原�
 说明：
 
 - Codex 内置 `imagegen` 不暴露模型选择，也不会返回后端模型名，所以只能在报告中标记为 `unknown_builtin_imagegen`。
-- 截至 2026-05-15 官方文档检查，OpenAI 文档里的 GPT Image 模型包括 `gpt-image-1.5`、`gpt-image-1`、`gpt-image-1-mini` 等；不要在 skill 里硬写未确认的 `gpt-image-2`。
-- 如果用户明确要求“image2”，应先核对当前官方模型列表，再决定是否切换 `image_model_config.example.json`。
-- 透明素材优先使用 API 支持的透明输出；如果当前路径不支持，就用纯色/高对比背景生成，再做 alpha 或背景移除后处理。
+- 截至 2026-05-15 官方文档检查，OpenAI 文档明确列出了 `gpt-image-2`、`gpt-image-1.5`、`gpt-image-1`、`gpt-image-1-mini` 等 GPT Image 模型。
+- 主模型使用 `gpt-image-2`；如果目标运行时没有开放该模型，再降级到 `gpt-image-1.5`。
+- `gpt-image-2` 当前不支持透明背景；透明素材使用支持透明的路径，或用纯色/高对比背景生成后做 alpha / 背景移除后处理。
 
 ### 典型输出
 
@@ -149,13 +149,14 @@ For generated or cleaned component assets, prefer explicit OpenAI Images API con
 
 Recommended default:
 
-- primary model: `gpt-image-1.5`
+- primary model: `gpt-image-2`
 - ChatGPT-aligned option: `chatgpt-image-latest`, when available
+- transparent asset fallback: `gpt-image-1.5` or alpha post-processing
 - cost fallback: `gpt-image-1-mini`
 - legacy fallback: `gpt-image-1`
 - Codex built-in `imagegen`: fallback only, reported as `unknown_builtin_imagegen`
 
-Do not hard-code `gpt-image-2` unless the current official OpenAI docs or target runtime explicitly expose that model.
+`gpt-image-2` is the preferred model when available, but it does not currently support transparent backgrounds.
 
 ## Status
 
