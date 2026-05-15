@@ -12,10 +12,12 @@ V6.1 combines:
 - high-fidelity hybrid reconstruction
 - SVM visual modules for complex visuals
 - editable PowerPoint text/table/chart overlays for business content
+- explicit image-generation model policy for reproducible asset creation
 - manifest/layout-driven deterministic PPT generation
 - a final Polish Pass against the reference image
 
 Read `references/protocol-v6-1.md` for the full protocol and schemas.
+Use `image_model_config.example.json` when the runtime supports OpenAI Images API calls.
 
 ## Workflow
 
@@ -51,6 +53,27 @@ Read `references/protocol-v6-1.md` for the full protocol and schemas.
 8. Remove or hide any temporary reference overlay.
 9. Deliver final PPTX, assets, layout/manifest JSON, preview, diff overlay, and polish report.
 
+## Image Model Policy
+
+Use API-level image generation when the task needs reproducible component assets, text-free SVM bases, cleaned backgrounds, icon redraws, or transparent/isolated visual modules.
+
+Preferred configuration:
+
+- Primary model: `gpt-image-1.5`
+- ChatGPT-style visual alignment option: `chatgpt-image-latest`, when available in the target runtime
+- Cost fallback: `gpt-image-1-mini`, only for non-critical decorative assets
+- Legacy fallback: `gpt-image-1`
+
+Do not claim that Codex built-in `imagegen` is a specific model. The built-in tool does not expose a model selector or return the backend model name. If only built-in `imagegen` is available, use it as a convenience fallback and mark model identity as `unknown_builtin_imagegen` in the report.
+
+If a user asks for "image2", first verify the current official OpenAI model list. As of the 2026-05-15 check, official OpenAI image generation docs list GPT Image models such as `gpt-image-1.5`, `gpt-image-1`, and `gpt-image-1-mini`; do not hard-code a non-documented `gpt-image-2` name.
+
+For transparent component assets:
+
+- Prefer a true transparent output when supported by the chosen API path.
+- Otherwise generate on a flat, high-contrast background and post-process alpha/background removal.
+- Record the strategy in `asset_metadata.json`.
+
 ## Directory Contract
 
 Use this structure by default:
@@ -73,6 +96,7 @@ project_slug/
       layout_v6.json
       asset_metadata.json
       polish_manifest.json
+      image_model_config.json
     07_output/
       editable_draft.pptx
       editable_reconstruction.pptx
@@ -158,6 +182,7 @@ If the original `bggg-creator-image2ppt` skill is available:
   - `asset_metadata.json`
   - `polish_manifest.json`
   - `polish_report.md`
+  - `image_model_config.json`
 
 ## Delivery Report
 
@@ -172,6 +197,7 @@ In the final response, include:
 - editable text count
 - visual asset count
 - native shape count
+- image generation backend and model identity, or `unknown_builtin_imagegen` if built-in imagegen was used
 - whether the PPTX was reopened/validated
 - whether a true PowerPoint/LibreOffice render was available
 - known differences from the reference image
