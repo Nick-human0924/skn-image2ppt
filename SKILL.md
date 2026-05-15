@@ -59,19 +59,20 @@ Use API-level image generation when the task needs reproducible component assets
 
 Preferred configuration:
 
-- Primary model: `gpt-image-1.5`
+- Primary model: `gpt-image-2`
 - ChatGPT-style visual alignment option: `chatgpt-image-latest`, when available in the target runtime
 - Cost fallback: `gpt-image-1-mini`, only for non-critical decorative assets
+- Transparent/background-removal fallback: `gpt-image-1.5` or post-process alpha
 - Legacy fallback: `gpt-image-1`
 
 Do not claim that Codex built-in `imagegen` is a specific model. The built-in tool does not expose a model selector or return the backend model name. If only built-in `imagegen` is available, use it as a convenience fallback and mark model identity as `unknown_builtin_imagegen` in the report.
 
-If a user asks for "image2", first verify the current official OpenAI model list. As of the 2026-05-15 check, official OpenAI image generation docs list GPT Image models such as `gpt-image-1.5`, `gpt-image-1`, and `gpt-image-1-mini`; do not hard-code a non-documented `gpt-image-2` name.
+As of the 2026-05-15 official documentation check, OpenAI image generation docs list GPT Image models including `gpt-image-2`, `gpt-image-1.5`, `gpt-image-1`, and `gpt-image-1-mini`. Prefer `gpt-image-2` for high-fidelity generated visual assets when API access is available.
 
 For transparent component assets:
 
-- Prefer a true transparent output when supported by the chosen API path.
-- Otherwise generate on a flat, high-contrast background and post-process alpha/background removal.
+- `gpt-image-2` does not currently support transparent backgrounds.
+- For transparent assets, use a model/API path that supports transparency, or generate on a flat, high-contrast background and post-process alpha/background removal.
 - Record the strategy in `asset_metadata.json`.
 
 ## Directory Contract
