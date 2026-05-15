@@ -1,0 +1,18 @@
+{
+  "generation_backend": "openai_images_api",
+  "primary_model": "gpt-image-1.5",
+  "chatgpt_alignment_model": "chatgpt-image-latest",
+  "fallback_models": {
+    "cost_sensitive": "gpt-image-1-mini",
+    "legacy": "gpt-image-1",
+    "builtin_codex_imagegen": "unknown_builtin_imagegen"
+  },
+  "default_quality": "high",
+  "transparent_asset_strategy": "api_transparency_or_postprocess_alpha",
+  "allow_builtin_imagegen_fallback": true,
+  "report_model_identity": true,
+  "notes": [
+    "Do not assume Codex built-in imagegen is a specific OpenAI Images API model.",
+    "If the user requests image2, verify current official OpenAI model availability before changing primary_model."
+  ]
+}
