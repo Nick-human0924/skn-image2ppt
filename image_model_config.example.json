@@ -1,8 +1,9 @@
 {
   "generation_backend": "openai_images_api",
-  "primary_model": "gpt-image-1.5",
+  "primary_model": "gpt-image-2",
   "chatgpt_alignment_model": "chatgpt-image-latest",
   "fallback_models": {
+    "transparent_assets": "gpt-image-1.5",
     "cost_sensitive": "gpt-image-1-mini",
     "legacy": "gpt-image-1",
     "builtin_codex_imagegen": "unknown_builtin_imagegen"
@@ -13,6 +14,7 @@
   "report_model_identity": true,
   "notes": [
     "Do not assume Codex built-in imagegen is a specific OpenAI Images API model.",
-    "If the user requests image2, verify current official OpenAI model availability before changing primary_model."
+    "gpt-image-2 is the primary model when OpenAI Images API access is available.",
+    "gpt-image-2 does not currently support transparent backgrounds; use a transparency-capable fallback or postprocess alpha."
   ]
 }
