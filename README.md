@@ -6,12 +6,16 @@ SKN Image2PPT 是一个专门解决 **Image2 / AI 生图结果无法直接转成
 
 很多 Image2、GPT 生图、PPT 截图或海报生成工具可以产出视觉效果很好的页面图片，但这些图片通常只是 PNG/JPEG：文字不能编辑，数字不能更新，表格、图标、标签和图表都被烘焙进像素里。直接把整张图贴进 PowerPoint 只能保留外观，不能满足后续修改；如果把所有元素都强行用 PPT 原生形状重画，又容易损失原图质感。
 
-SKN Image2PPT 的核心思想是 **高保真混合重建**：
+SKN Image2PPT V6.2 的核心思想是 **重构优先的高保真混合重建**：
 
 ```text
-复杂视觉资产高保真保留
+大模块结构化重建
++
+原子视觉资产 / 干净科学视觉底座高保真保留或生成
 +
 核心业务内容可编辑重建
++
+层级与比例保真
 +
 manifest / layout 驱动 PPT 生成
 +
@@ -35,13 +39,20 @@ SKN Image2PPT 不追求“所有像素都可编辑”，而是按元素类型决
 | 数字、标签、表格、图表标签 | PPT 文本 / 表格 / 图表 |
 | 卡片、分割线、徽章、阶段条 | PPT 原生形状 |
 | 简单图表 | 整体用 PPT/SVG/native chart 重建 |
-| 飞轮、地图、机制图等复杂模块 | SVM 视觉底座 + 可编辑覆盖层 |
+| 飞轮、地图、机制图、表格、卡片组等大模块 | 优先结构化重建；必要时使用干净视觉底座 + 可编辑覆盖层 |
 | Logo、纹理、插画、照片 | 高保真图片或 SVG 资产 |
 | 背景光效、波浪 | 透明 PNG / SVG / 干净背景资产 |
 
+V6.2 明确禁止把大模块直接裁成图片来冒充重构。超过 12%-15% 画布面积、含文字/编号/箭头/表格线/卡片边框、或承担第一视觉焦点的模块，必须拆解重建，不能 raw crop。
+
 ### SVM 语义视觉模块
 
-SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂模块。它把复杂几何、渐变、阴影、遮挡关系保留为高保真视觉底座，再把业务文字、编号、标签作为可编辑 PPT 对象覆盖上去。
+SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂模块。V6.2 中 SVM 不是“裁图 fallback”，而是四种明确模式：
+
+- `SVM_NATIVE`：表格、卡片组、流程、飞轮、证据阶梯等用 PPT 形状和可编辑文本重建。
+- `SVM_CLEAN_BASE_PLUS_OVERLAY`：细胞、脂质体、肿瘤组织等复杂科学图只保留无文字底图，上层箭头、标签、编号全部可编辑。
+- `SVM_ATOMIC_ASSET`：瓶身、logo、单个脂质体/细胞、医生插画等原子对象可保留为图像。
+- `SVM_GENERATIVE_BASE`：当大科学图裁切会残缺、重影或比例失真时，先把图反向拆解成 prompt，生成无文字科学视觉底座，再叠加可编辑业务层。
 
 这样可以避免两个极端：
 
@@ -50,7 +61,7 @@ SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂
 
 ### Polish Pass 精修
 
-V6.1 增加了 Polish Pass，用来处理初稿已经接近原图后仍然肉眼可见的小问题：
+V6.2 的 Polish Pass 不只处理小脏点，还要检查页面层级、比例、编号和图标系统：
 
 - 文字重影或底图文字残留
 - 重复线条、重复圆点、重复图标
@@ -58,12 +69,17 @@ V6.1 增加了 Polish Pass，用来处理初稿已经接近原图后仍然肉眼
 - 圆角、边框、阴影不统一
 - 图标像 emoji 或占位符
 - 背景资产有白底、硬边、矩形裁切感
+- 第一视觉焦点被压低
+- 页面过度规整但不高级
+- 编号圆点、图标线宽、图标容器不统一
 
 Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原图，但最终交付前必须隐藏或删除参考层。
 
 ## 生图模型策略
 
-如果需要生成或清理组件图片、去文字背景、生成透明图标、生成 SVM 视觉底图，优先使用可明确指定模型的 OpenAI Images API，而不是依赖不透明的内置生图工具。
+如果需要生成或清理组件图片、去文字背景、生成透明图标、生成 SVM 科学视觉底图，优先使用可明确指定模型的 OpenAI Images API，而不是依赖不透明的内置生图工具。
+
+V6.2 允许对脂质体、细胞结构、肿瘤组织、药物释放等大科学图做“反向拆解成 prompt 再生成”，但生成结果只能作为 **无文字视觉底座**；所有标签、箭头、数字、证据说明、结论必须回到 PPT 可编辑对象。
 
 当前建议配置：
 
@@ -117,9 +133,10 @@ project_slug/
 ```text
 使用 skn-image2ppt，把这张参考图转换成高保真、可编辑的 PPTX。
 标题、数字、标签、要点、表格和图表标签必须保持可编辑。
-复杂视觉模块可以保留为高保真视觉资产或 SVM 视觉底座。
+大模块必须结构化重建；不要直接裁成局部大图使用。
+脂质体、细胞结构等复杂科学图可以反向拆解成 prompt，生成无文字视觉底座，再叠加可编辑标签、箭头和说明。
 如需生成或清理组件图片，优先使用 image_model_config.example.json 中定义的 OpenAI Images API 模型策略。
-生成后执行 Polish Pass，清理重影、重复元素、对齐偏差、图标不统一和背景硬边问题。
+生成后执行 V6.2 Polish Pass，清理重影、重复元素、对齐偏差、图标不统一、背景硬边、层级压低和比例失真问题。
 输出 PPTX、资产文件夹、layout JSON、预览图、diff overlay 和 polish report。
 ```
 
@@ -160,4 +177,4 @@ Recommended default:
 
 ## Status
 
-This repository contains the skill instructions, protocol reference, and model configuration example. It is intended to be used by Codex or another capable agent that can inspect images, generate or extract assets, produce manifest/layout JSON, and build PowerPoint files.
+This repository contains the skill instructions and protocol reference. It is intended to be used by Codex or another capable agent that can inspect images, generate or extract assets, produce manifest/layout JSON, and build PowerPoint files.
