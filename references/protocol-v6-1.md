@@ -95,6 +95,25 @@ complex visual assets high fidelity
 overall visual match close to the source image
 ```
 
+### 1.5 Image Generation Model Policy
+
+When the workflow needs generated or cleaned visual components, prefer explicit API-level model configuration instead of an opaque built-in image tool.
+
+Recommended model policy as of the 2026-05-15 official documentation check:
+
+| Role | Model | Notes |
+| --- | --- | --- |
+| Primary asset generation/editing | `gpt-image-2` | Best default for high-fidelity component assets when API access is available. |
+| ChatGPT-aligned visual behavior | `chatgpt-image-latest` | Use only when the target runtime exposes it. |
+| Transparent asset fallback | `gpt-image-1.5` or alpha post-processing | Use because `gpt-image-2` does not currently support transparent backgrounds. |
+| Cost-sensitive decorative assets | `gpt-image-1-mini` | Use for low-risk background or decorative pieces. |
+| Legacy fallback | `gpt-image-1` | Use when 1.5 is unavailable. |
+| Codex built-in image tool | `unknown_builtin_imagegen` | Use only as fallback because the backend model is not selectable or reported. |
+
+As of the 2026-05-15 official documentation check, OpenAI image generation docs list `gpt-image-2`. Use it as the primary model when available, and record the selected model in `image_model_config.json` and the conversion report.
+
+For transparent assets, prefer API transparency when supported. `gpt-image-2` does not currently support transparent backgrounds, so use a transparency-capable fallback or generate against a controlled background and post-process alpha/background removal. Record this choice in `asset_metadata.json`.
+
 ### 1.3 Rebuild Simple Charts as a Whole
 
 For simple charts:
@@ -198,6 +217,8 @@ SVM structure:
   "module_type": "SVM_FLYWHEEL",
   "visual_base": "assets_v6/03_svm/flywheel_001/flywheel_visual_base.png",
   "visual_base_locked": true,
+  "generation_model": "gpt-image-2",
+  "generation_backend": "openai_images_api",
   "editable_overlays": [
     "center_title",
     "segment_titles",
@@ -501,6 +522,7 @@ project_slug/
       layout_v6.json
       asset_metadata.json
       polish_manifest.json
+      image_model_config.json
     07_output/
       editable_draft.pptx
       editable_reconstruction.pptx
@@ -605,17 +627,18 @@ Follow this workflow:
 2. Classify elements into visual assets, native shapes, editable text/table/chart, simple charts to rebuild, and complex modules to assetize or turn into SVMs.
 3. Preserve complex non-editable visuals as high-fidelity assets.
 4. Rebuild business-critical text, numbers, tables, and labels as native PPT objects.
-5. For simple data charts, rebuild the full chart system instead of mixing image base and overlay lines.
-6. Generate the editable PPT draft.
-7. Render a preview.
-8. Add a Polish Pass:
+5. When generating or cleaning image assets, prefer explicit OpenAI Images API configuration with `gpt-image-2`; for transparent assets, use a transparency-capable fallback or post-process alpha. If only Codex built-in imagegen is available, record the model identity as unknown.
+6. For simple data charts, rebuild the full chart system instead of mixing image base and overlay lines.
+7. Generate the editable PPT draft.
+8. Render a preview.
+9. Add a Polish Pass:
    - remove text ghosting
    - delete duplicated lines/points/text
    - adjust x/y/size/font against the reference image
    - unify radius, shadow, border, icons
    - correct background asset edges
-9. Do not solve small visual issues by inserting a full-slide screenshot.
-10. Final PPT must preserve editability of business-critical content.
+10. Do not solve small visual issues by inserting a full-slide screenshot.
+11. Final PPT must preserve editability of business-critical content.
 
 Final outputs:
 - editable_pptx
