@@ -1,206 +1,228 @@
 ---
 name: skn-image2ppt
-description: High-fidelity hybrid Image2PPT reconstruction with a final Polish Pass. Use when Codex needs to convert PPT screenshots, slide images, posters, infographics, HTML/SVG designs, or Image2 visual drafts into editable PowerPoint files while preserving complex visual assets, rebuilding business-critical text/data as editable PPT objects, generating layout/manifest metadata, preview/diff artifacts, and polishing visible issues such as ghosting, duplicated elements, misalignment, inconsistent icons, border/radius mismatch, and hard-edged background assets.
+description: V6.4 topology-faithful Premium Visual Asset + Editable Semantic Overlay Image2PPT conversion. Use when Codex needs to convert PPT screenshots, slide images, posters, infographics, HTML/SVG designs, or Image2 visual drafts into editable PowerPoint while preserving the reference page's main visual structure. This skill avoids full-slide screenshots, large raw crops with baked business text, low-quality all-vector redraws, and theme-only regenerated assets. It rebuilds business text, tables, labels, arrows, numbers, charts, insight cards, and conclusion bars as editable PPT objects, while preserving or generating high-quality text-free visual assets for scientific/medical illustrations, mechanism diagrams, evidence pyramids, dosing workflows, liposomes, cells, drug-delivery scenes, 3D objects, dashboards, flywheels, glows, gradients, and micro-texture.
 ---
 
 # SKN Image2PPT
 
 Use this skill to rebuild a flat reference image into a visually close, business-editable `.pptx`.
 
-V6.1 combines:
+Default to **V6.4 / Topology-Faithful Premium Visual Asset + Editable Semantic Overlay** for every new task. V6.4 keeps the V6.3 visual-asset approach and adds a stronger rule: do not replace the reference page's main structure with a merely similar theme.
 
-- high-fidelity hybrid reconstruction
-- SVM visual modules for complex visuals
-- editable PowerPoint text/table/chart overlays for business content
-- explicit image-generation model policy for reproducible asset creation
-- manifest/layout-driven deterministic PPT generation
-- a final Polish Pass against the reference image
+## Core Principle
 
-Read `references/protocol-v6-1.md` for the full protocol and schemas.
-Use `image_model_config.example.json` when the runtime supports OpenAI Images API calls.
+```text
+No full-slide screenshot.
+No large raw crop with baked business text.
+No low-quality vector simplification of premium scientific visuals.
 
-## Workflow
+High-quality text-free visual asset layer
++ editable PPT semantic layer
++ native PPT simple structure layer
++ topology lock + visual element ledger
+= business-editable, visually premium reconstruction.
+```
 
-1. Create a project directory and copy the source image into:
+Use Image2 / image generation / image cleanup for **visual assets only**, not for complete PPT pages. Codex builds the editable information layer in PowerPoint.
+
+## When To Read References
+
+- Read `references/protocol-v6-4.md` for the current protocol, topology lock, visual element ledger, asset schemas, QA gates, and prompt templates.
+- Read `references/protocol-v6-3.md` only when maintaining older V6.3 projects.
+- Read `references/protocol-v6-2.md` only when maintaining older V6.2 projects.
+- Use `image_model_config.example.json` when the runtime supports API-level image generation.
+
+## V6.4 Workflow
+
+1. Create the project directory and copy source images into:
    - `original_inputs/`
-   - `assets_v6/00_reference/original.png`
-2. Analyze the reference image:
-   - slide size and aspect ratio
-   - major regions
-   - complex visual modules
-   - text hierarchy
-   - cards/containers/dividers
-   - logos/icons/background assets
-3. Classify elements:
-   - visual assets
-   - native shapes
-   - editable text/table/chart
-   - simple charts to rebuild as a whole
-   - complex modules to assetize as SVMs
-4. Build the editable draft:
-   - Preserve complex non-editable visuals as high-fidelity assets.
-   - Rebuild business-critical text, numbers, labels, tables, and chart labels as editable PPT objects.
-   - Rebuild cards, borders, dividers, badges, and simple containers as native PPT shapes.
-   - For simple charts, rebuild the whole chart system instead of mixing image base and overlay lines.
-5. Compile the PPTX with a deterministic manifest/layout builder. If `bggg-creator-image2ppt` is installed, use its `image2pptx.py build` script as the compiler.
-6. Generate or render a draft preview.
-7. Run Polish Pass:
-   - remove text ghosting and baked-text residue
-   - delete duplicated lines, points, icons, and labels
-   - adjust x/y/size/font against the reference image
-   - unify radius, border, shadow, font size, and line spacing
-   - correct icon style and background asset edges
-8. Remove or hide any temporary reference overlay.
-9. Deliver final PPTX, assets, layout/manifest JSON, preview, diff overlay, and polish report.
+   - `assets_v6/00_reference/`
+2. Analyze each reference slide:
+   - visual hierarchy and first-read object
+   - page topology, such as radial network, two-panel mechanism, evidence pyramid, dosing workflow, matrix, flywheel, dashboard, or table
+   - premium visual modules
+   - every non-text visual element, including small icons, vials, bags, molecules, pumps, brackets, guide lines, arrows, connectors, shadows, and glows
+   - editable semantic content
+   - tables/charts/processes
+   - template and brand chrome
+3. Build `topology_lock.json` and `visual_element_ledger.json` before generating slides:
+   - lock the reference slide's main structure and allowed deviation level
+   - map every non-text visual element to `native_shape`, `text_free_asset`, `icon`, `template`, or `intentionally_omitted`
+   - fail QA if a core structure is changed or a required visual element is missing without a recorded reason
+4. Build `visual_asset_plan.json` before generating slides:
+   - list every high-quality text-free visual asset needed
+   - define each asset's target bounding box and aspect ratio
+   - classify the asset as scientific illustration, dashboard/flywheel base, glow/texture, atomic object, or clean background
+   - write reverse prompts that include required sub-elements, relative placement, empty overlay zones, and target background
+5. Generate or clean visual assets:
+   - assets must contain **no text, no labels, no arrows, no numbers, no tables, no legends, no logo, no watermark**
+   - assets must match the reference structure, not only the reference topic
+   - preserve 3D depth, glow, gradient, micro-texture, medical illustration quality, and composition
+   - reject assets that contain text-like marks or low-quality simplified geometry
+6. Run Background Integration Pass:
+   - isolated objects such as liposomes/vials must use transparent or alpha-matted backgrounds
+   - scene assets should either fill the whole visual panel or have feathered edges
+   - asset background color must match the PPT/card/template background
+   - record the target PPT/card background color and the selected treatment (`transparent_matte`, `same_color_fill`, `full_panel`, or `edge_feather`)
+   - inspect assets at final slide size; faint gray rectangles and mismatched color temperature still fail even if the edge is soft
+   - do not leave hard rectangular white, gray, or blue asset edges unless the rectangle is an intentional framed panel
+7. Build the editable PPT:
+   - place visual assets as locked/image base components
+   - overlay all titles, labels, numbers, arrows, tables, bullets, legends, insight cards, and conclusions as editable PPT objects
+   - rebuild simple cards, borders, table grids, badges, and connectors as native PPT shapes
+8. Run Topology + Hierarchy Pass:
+   - compare each reconstructed page with `topology_lock.json`
+   - keep radial nodes radial, pyramids pyramidal, workflows procedural, and two-panel mechanisms two-panel unless the user requests redesign
+   - preserve guide-line direction, connector count, major object placement, and reference reading path
+   - preserve reference first-read dominance
+   - do not shrink premium visuals into small cards
+   - avoid overly regular internal-training style layouts when the reference has a high-end consulting/medical-conference look
+9. Run Premium Polish Pass:
+   - remove ghosted text and duplicate semantics
+   - tune spacing, line weights, shadows, radius, numbering, icon style, and text rhythm
+   - ensure visual assets retain premium depth and are not distorted or hard-edged
+10. Render all slides and inspect:
+   - visual asset quality
+   - overlay alignment
+   - text overflow/clipping
+   - editability of all business content
+11. Deliver PPTX plus sidecar artifacts:
+   - `topology_lock.json`
+   - `visual_element_ledger.json`
+   - `visual_asset_plan.json`
+   - `visual_asset_prompts.json`
+   - `overlay_plan.json`
+   - `module_ownership.json`
+   - `visual_hierarchy.json`
+   - `icon_system.json`
+   - `premium_visual_qa.json`
+   - `manifest.json`
+   - `polish_report.md`
 
-## Image Model Policy
+## Ownership Rules
 
-Use API-level image generation when the task needs reproducible component assets, text-free SVM bases, cleaned backgrounds, icon redraws, or transparent/isolated visual modules.
+### High-Quality Visual Asset Layer
 
-Preferred configuration:
+Use image assets, not PPT primitive redraws, for:
 
-- Primary model: `gpt-image-2`
-- ChatGPT-style visual alignment option: `chatgpt-image-latest`, when available in the target runtime
-- Cost fallback: `gpt-image-1-mini`, only for non-critical decorative assets
-- Transparent/background-removal fallback: `gpt-image-1.5` or post-process alpha
-- Legacy fallback: `gpt-image-1`
+- liposome cutaways, lipid bilayers, encapsulated drug particles
+- tumor tissue, cells, microenvironment, vascular delivery scenes
+- molecular/cellular backgrounds and medical mechanism art
+- evidence pyramids, 3D stair models, premium process bases, and complex workflow diagrams when gradients/depth/glow carry the design quality
+- 3D scientific objects, depth-of-field particle fields, soft glows, micro-textures
+- premium dashboards, value orbits, flywheels, and closed-loop bases where glow/gradient/depth carries the design quality
+- product vials, photos, portraits, logos, and supplied bitmap identity assets
 
-Do not claim that Codex built-in `imagegen` is a specific model. The built-in tool does not expose a model selector or return the backend model name. If only built-in `imagegen` is available, use it as a convenience fallback and mark model identity as `unknown_builtin_imagegen` in the report.
+These assets must be complete, clean, high-resolution, and text-free.
 
-As of the 2026-05-15 official documentation check, OpenAI image generation docs list GPT Image models including `gpt-image-2`, `gpt-image-1.5`, `gpt-image-1`, and `gpt-image-1-mini`. Prefer `gpt-image-2` for high-fidelity generated visual assets when API access is available.
+### Editable Semantic Layer
 
-For transparent component assets:
+Always rebuild as editable PPT objects:
 
-- `gpt-image-2` does not currently support transparent backgrounds.
-- For transparent assets, use a model/API path that supports transparency, or generate on a flat, high-contrast background and post-process alpha/background removal.
-- Record the strategy in `asset_metadata.json`.
+- page titles and subtitles
+- product names, claims, bullets, labels, legends
+- numeric values, percentages, units, dates
+- arrows, connector labels, numbered badges
+- tables, chart labels, axis labels, matrix cells
+- insight cards, callouts, conclusion bars, source notes
 
-## Directory Contract
+Do not bake business claims, numbers, arrows, or labels into generated images.
 
-Use this structure by default:
+### Native Structure Layer
 
-```text
-project_slug/
-  original_inputs/
-  assets_v6/
-    00_reference/
-      original.png
-      reference_overlay.png
-      page_analysis.json
-    01_background/
-    02_visual_assets/
-    03_svm/
-    04_icons/
-    05_components/
-    06_layout/
-      manifest.json
-      layout_v6.json
-      asset_metadata.json
-      polish_manifest.json
-      image_model_config.json
-    07_output/
-      editable_draft.pptx
-      editable_reconstruction.pptx
-    08_qa/
-      draft_preview.png
-      reconstruction_preview.png
-      diff_overlay.png
-      polish_report.md
-      quality_report.md
-```
+Use PPT shapes for:
 
-## Key Rules
+- card containers and borders
+- table grids and dividers
+- simple badges, pills, ribbons, arrows, and callout frames
+- simple line icons when they are not the main visual quality carrier
 
-- Do not use a full-slide screenshot as the final solution unless the user explicitly asks for bitmap fallback.
-- Do not make all elements editable if doing so visibly reduces quality.
-- Do not leave business-critical text baked into visual assets when it should be editable.
-- Do not overlay editable text directly on top of baked text; mask or clean the base first.
-- Do not duplicate lines, dots, icons, or labels across the asset layer and PPT layer.
-- Do not mix ownership inside simple chart regions; either rebuild the whole chart or keep the whole visual base as an asset and overlay only editable labels.
+Do not use native shapes to approximate complex scientific art when that would visibly lower the page quality.
+
+## Hard Rules
+
+- Do not generate a complete slide image and then split it into PPT pieces.
+- Do not change the reference page topology, such as replacing a radial product network with product cards, a mechanism figure with an unrelated theme image, a 3D pyramid with flat bars, or a dosing workflow with missing process visuals.
+- Do not crop a large reference module if it contains baked text, arrows, numbers, table data, borders, labels, or layout furniture.
+- Do not replace high-end scientific illustrations with simplified vector circles, lines, and icons.
+- Do not stretch liposomes, cells, tissue scenes, flywheels, dashboards, vials, or 3D visuals non-uniformly.
+- Do not paste assets with mismatched backgrounds or visible hard rectangular edges.
+- Do not accept a generated visual asset only because it is text-free; it must also blend with the actual PPT background or card fill at final placement size.
+- Do not overlay editable text directly on baked source text. Clean or regenerate the base first.
+- Do not leave chart/table values baked into images.
 - Do not use emoji or placeholder glyphs as final icons.
-- Do not use hard rectangular crops, white boxes, or rough asset edges.
+- Do not omit small but meaningful visual elements such as infusion bags, molecule structures, pumps, brackets, guide lines, node rings, evidence icons, or arrow systems.
+- If a visual base cannot be generated cleanly, explicitly mark the fallback in the reports.
 
-## Polish Pass Rules
+## Prompt Contract For Visual Assets
 
-Run Polish Pass after the editable draft preview exists.
-
-1. **Ghosting removal**: if baked text remains under editable text, cover only the residue with a matching mask, then place editable text.
-2. **Duplicate removal**: one semantic element appears once; delete duplicate lines, dots, labels, and icons.
-3. **Chart ownership**: simple chart regions should be fully rebuilt; complex chart/module regions should be SVM assets plus editable overlays.
-4. **Coordinate micro-adjustment**: adjust whole modules first, internal groups second, individual text last.
-5. **Business polish consistency**: keep radius restrained, shadows light, borders pale, icons unified, and fonts clear.
-6. **Background edge repair**: feather or replace hard-edged image assets; use full clean background assets instead of visible local crop blocks.
-
-## Reference Overlay
-
-For high-fidelity alignment, create a temporary reference overlay:
+Every premium asset prompt must include:
 
 ```text
-source image layer
-opacity: 30%-50%
-locked or marked QA-only
-used for alignment
-removed or hidden before final delivery
+Create a high-end text-free medical consulting PowerPoint visual asset.
+Subject: ...
+Composition: ...
+Style: premium medical conference / pharmaceutical consulting, 3D or 2.5D, soft depth, glow, gradient, micro-texture, clean white or pale-blue background.
+Topology requirements: include the required sub-elements and relative placement from the reference image; preserve the reference reading path and blank overlay zones.
+Constraints: no text, no Chinese characters, no labels, no arrows, no numbers, no table, no legend, no logo, no watermark, no UI.
+Usability: leave clean blank zones for editable PPT overlays; complete uncropped object; no hard rectangular crop edge; high resolution.
+Aspect ratio: ...
 ```
 
-Use it to check only high-sensitivity regions:
+Store prompt, reverse analysis, backend/model identity, source reference, output path, and overlay plan in `visual_asset_prompts.json`.
 
-- title area
-- main visual/chart area
-- right-side explanation area
-- bottom timeline/conclusion area
-- logo area
-- major background decoration
+## Mandatory Asset Examples
 
-## Manifest Metadata
+For pharmaceutical comparison decks, generate or clean assets like:
 
-Include polish metadata when possible:
+- P1 center 3D liposome sphere with no product text
+- P1 radial four-product node network structure: circles, guide lines, central liposome, and bottom flow arrows must stay structurally faithful
+- P2 ordinary irinotecan dispersion scene, no labels
+- P2 liposome tumor enrichment / delivery scene, no labels
+- P4 evidence hierarchy pyramid base, no labels or numbers
+- P7 dosing workflow visuals: infusion bag, liposome, molecule, pump, repeat bracket, no baked business text
+- P5 TEA8SOS liposome cutaway, no labels
+- P5 liposome II cutaway, no labels
+- P8 four-dimensional hospital value dashboard base, no text
+- P9 three-value closed-loop / flywheel base, no text
 
-```json
-{
-  "element_id": "segment_1_title",
-  "semantic_role": "flywheel segment title",
-  "layer": "editable_content",
-  "owner": "ppt_text",
-  "polish_required": true,
-  "polish_type": ["position", "font_size", "alignment"],
-  "reference_bbox": {"x": 690, "y": 166, "w": 180, "h": 28},
-  "current_bbox": {"x": 696, "y": 170, "w": 184, "h": 30},
-  "max_allowed_offset_px": 8,
-  "final_action": "adjust_xy"
-}
-```
+Then overlay all semantics in PPT.
 
-## Compatibility With bggg-creator-image2ppt
+## QA Gates
 
-If the original `bggg-creator-image2ppt` skill is available:
+Fail V6.4 QA if any is true:
 
-- Use it as the PPTX compiler.
-- Store visual assets in the project folder.
-- Generate a standard `manifest.json` with `background`, `image`, `text`, `shape`, and `table` elements.
-- Keep V6.1 metadata in sidecar files:
-  - `layout_v6.json`
-  - `asset_metadata.json`
-  - `polish_manifest.json`
-  - `polish_report.md`
-  - `image_model_config.json`
+- a full slide is a screenshot
+- a large module is a raw crop with baked business content
+- a complex scientific visual is redrawn as visibly simplified PPT vectors
+- a premium dashboard/flywheel loses glow, gradient, micro-texture, or 3D depth and looks like internal training material
+- the main reference topology is changed without user approval
+- `visual_element_ledger.json` is missing or leaves required visual elements unmapped
+- a generated asset is theme-similar but structurally different from the reference
+- a visual asset contains text-like marks, labels, arrows, numbers, legends, tables, logos, or watermarks
+- a visual asset has a visible background mismatch or hard rectangular edge against the PPT page/card
+- editable business text is missing for titles, labels, tables, chart labels, source notes, or conclusion bars
+- scientific visuals are cropped, distorted, or non-uniformly scaled
+- first-read hierarchy is weaker than the reference
 
 ## Delivery Report
 
 In the final response, include:
 
 - final PPTX path
-- asset folder or package path
+- asset folder/package path
 - preview path
-- diff overlay path
-- layout/manifest path
+- diff/QA path
+- prompt/asset plan path
 - polish report path
 - editable text count
 - visual asset count
 - native shape count
-- image generation backend and model identity, or `unknown_builtin_imagegen` if built-in imagegen was used
-- whether the PPTX was reopened/validated
-- whether a true PowerPoint/LibreOffice render was available
+- whether the PPTX reopened/validated
 - known differences from the reference image
 
-Use the scoring thresholds in `references/protocol-v6-1.md`.
+## One-Sentence Principle
+
+```text
+V6.4 preserves reference topology, uses Image2 for premium text-free visual assets, and uses Codex for editable PPT semantics.
+```
