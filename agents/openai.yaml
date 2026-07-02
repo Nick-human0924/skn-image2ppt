@@ -1,4 +1,4 @@
 interface:
   display_name: "SKN Image2PPT"
-  short_description: "Hybrid Image2PPT reconstruction with Polish Pass"
-  default_prompt: "Use skn-image2ppt to convert this reference image into a high-fidelity editable PPTX. Use the explicit image model policy for generated assets, then run a Polish Pass against the reference to remove visible ghosting, duplication, alignment, icon, border, and background-edge issues."
+  short_description: "V6.4 topology-faithful premium assets plus editable PPT semantics"
+  default_prompt: "Use skn-image2ppt V6.4 to convert this reference image into a high-fidelity editable PPTX. First create topology_lock.json and visual_element_ledger.json so the reference structure and every meaningful non-text visual element are preserved. Do not use full-slide screenshots, large raw crops with baked text, low-quality all-vector redraws, or theme-similar regenerated assets that change the original topology. Generate or clean high-quality text-free visual assets for scientific/medical illustrations, mechanism diagrams, evidence pyramids, dosing workflows, dashboards, flywheels, glows, and textures, then overlay editable PPT titles, labels, arrows, numbers, tables, insights, sources, and conclusions. Create asset plans, prompts, overlay plans, QA previews, and Polish Pass reports before delivery."
