@@ -185,13 +185,14 @@ Run this after the draft layout exists and before delivery:
 3. Render the PPT preview.
 4. `placement_qa`: draw boxes over the rendered preview.
 5. `visual_compare_qa`: generate side-by-side, blend, and diff heatmap.
-6. Correct:
+6. `pptx_editability_lint`: check ZIP/XML validity, unexpected shrink-to-fit, and tiny explicit font runs.
+7. Correct:
    - icon center and size;
    - text point size and line spacing;
    - text bbox and wrapping;
    - frame-anchor offsets;
    - duplicated or missing icons.
-7. Re-render and repeat until the major visual drift is resolved.
+8. Re-render and repeat until the major visual drift is resolved.
 
 ## 9. Tooling
 
@@ -204,6 +205,7 @@ scripts/slice_grid.py
 scripts/layout_guard.py
 scripts/placement_qa.py
 scripts/visual_compare_qa.py
+scripts/pptx_editability_lint.py
 ```
 
 These scripts are utility guards. They do not replace visual judgment, but they prevent common numerical and asset-preparation failures.
@@ -220,6 +222,7 @@ Fail V6.5 QA if any is true:
 - a meaningful icon is missing, clipped, too small, duplicated, or baked into an uncopyable large asset without reason.
 - no placement overlay is generated for dense pages.
 - no visual diff/side-by-side QA is generated for final preview.
+- PPTX ZIP/XML validation fails, or normal editable text uses unexpected shrink-to-fit.
 - frame-attached text is visibly offset after asset generation and lacks frame-anchor correction.
 
 ## 11. Final Deliverables

@@ -8,5 +8,6 @@ These scripts implement the V6.5 Engineering QA pass:
 - `layout_guard.py`: validate `source_bbox`, fraction coordinates, and text sizing.
 - `placement_qa.py`: draw layout boxes on the source image and rendered preview.
 - `visual_compare_qa.py`: create side-by-side, blend, diff heatmap, and metrics.
+- `pptx_editability_lint.py`: check PPTX ZIP/XML validity, shrink-to-fit, and tiny explicit font runs.
 
 They are guards and helpers; visual judgment and Polish Pass are still required.

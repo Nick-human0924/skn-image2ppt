@@ -42,6 +42,7 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
   - `layout_guard.py` for source_bbox/fraction/font-size contract checks.
   - `placement_qa.py` for source/preview bbox overlays.
   - `visual_compare_qa.py` for side-by-side, blend, and diff heatmap QA.
+  - `pptx_editability_lint.py` for PPTX ZIP/XML, shrink-to-fit, and tiny-font checks.
 
 ## V6.5 Workflow
 
@@ -105,6 +106,7 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
    - run coordinate/font checks before rendering
    - render preview and generate source/preview placement overlays
    - generate side-by-side, blend, and diff heatmap QA images
+   - lint the PPTX package for ZIP/XML validity, `normAutofit`, and unexpectedly small explicit font runs
    - correct text scale before correcting text position
    - correct icon size/center before correcting surrounding text
    - run frame-anchor calibration for text attached to generated or image-based frames
@@ -190,6 +192,7 @@ Do not use native shapes to approximate complex scientific art when that would v
 - Do not place text using thumbnail coordinates; convert all measured boxes back to source-image pixels first.
 - Do not accept text that is visibly smaller than the reference. Fix font size using the source-pixel-height formula before moving boxes.
 - Do not deliver without at least one preview-to-reference placement QA pass for pages with dense icons or labels.
+- Do not deliver a PPTX that requires PowerPoint repair or relies on unexpected shrink-to-fit for normal body text.
 - If a visual base cannot be generated cleanly, explicitly mark the fallback in the reports.
 
 ## Prompt Contract For Visual Assets
@@ -260,6 +263,7 @@ In the final response, include:
 - native shape count
 - whether the PPTX reopened/validated
 - whether coordinate/font guard passed
+- whether PPTX editability/package lint passed
 - whether placement overlay and visual diff were generated
 - known differences from the reference image
 
