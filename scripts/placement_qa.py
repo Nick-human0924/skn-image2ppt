@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draw V6.5 layout boxes on source and optional preview images."""
+"""Draw V6.6 layout boxes on source and optional preview images."""
 
 import argparse
 import json

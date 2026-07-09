@@ -1,13 +1,13 @@
 ---
 name: skn-image2ppt
-description: V6.5 topology-faithful, engineering-guarded Image2PPT conversion. Use when Codex needs to convert PPT screenshots, slide images, posters, infographics, HTML/SVG designs, or Image2 visual drafts into editable PowerPoint while preserving the reference page's main visual structure, icon fidelity, text scale, and placement accuracy. This skill avoids full-slide screenshots, large raw crops with baked business text, low-quality all-vector redraws, theme-only regenerated assets, broken or uncopyable icons, tiny text boxes, and coordinate drift. It rebuilds business text, tables, labels, arrows, numbers, charts, insight cards, and conclusion bars as editable PPT objects, while preserving or generating high-quality text-free visual assets and requiring RUN_ROOT isolation, source_bbox coordinate contracts, icon extraction QA, placement overlays, visual diff, and frame-anchor calibration.
+description: V6.6 topology-faithful, execution-guarded Image2PPT conversion. Use when Codex needs to convert PPT screenshots, slide images, posters, infographics, HTML/SVG designs, or Image2 visual drafts into editable PowerPoint while preserving the reference page's main visual structure, icon fidelity, text scale, and placement accuracy. This skill avoids full-slide screenshots, large raw crops with baked business text, low-quality all-vector redraws, theme-only regenerated assets, broken or uncopyable icons, tiny text boxes, coordinate drift, unproven imagegen assets, and ad hoc PPTX generation. It rebuilds business text, tables, labels, arrows, numbers, charts, insight cards, and conclusion bars as editable PPT objects, while preserving or generating high-quality text-free visual assets and requiring RUN_ROOT isolation, source_bbox coordinate contracts, imagegen edit-target evidence, icon extraction QA, standard compose_pptx generation, placement overlays, visual diff, PPTX lint, and frame-anchor calibration.
 ---
 
 # SKN Image2PPT
 
 Use this skill to rebuild a flat reference image into a visually close, business-editable `.pptx`.
 
-Default to **V6.5 / Topology-Faithful Premium Visual Asset + Engineering QA** for every new task. V6.5 keeps the V6.4 topology lock, then adds an engineering pass for the failure modes seen in practice: uncopyable icons, text that renders too small, and layout drift.
+Default to **V6.6 / Topology-Faithful Premium Visual Asset + Execution QA** for every new task. V6.6 keeps the V6.5 topology and coordinate guard, then adds the Gorden-style execution engine: standard composition, stronger chroma key, stronger icon slicing, imagegen evidence, and optional frame-layer reconstruction.
 
 ## Core Principle
 
@@ -18,11 +18,12 @@ No low-quality vector simplification of premium scientific visuals.
 
 RUN_ROOT task isolation
 + source_bbox coordinate contract
++ imagegen edit-target evidence
 + high-quality text-free visual asset layer
 + editable PPT semantic layer
 + native PPT simple structure layer
 + topology lock + visual element ledger
-+ icon extraction QA + placement overlay + visual diff
++ standard compose_pptx + icon extraction QA + placement overlay + visual diff
 = business-editable, visually closer reconstruction.
 ```
 
@@ -30,7 +31,8 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
 
 ## When To Read References
 
-- Read `references/protocol-v6-5.md` for the current protocol, engineering QA pass, coordinate contract, icon pipeline, QA gates, and prompt templates.
+- Read `references/protocol-v6-6.md` for the current protocol, execution engine, reconstruction modes, imagegen evidence, stronger icon/frame pipeline, QA gates, and prompt templates.
+- Read `references/protocol-v6-5.md` only when maintaining older V6.5 projects.
 - Read `references/protocol-v6-4.md` only when maintaining older V6.4 projects.
 - Read `references/protocol-v6-3.md` only when maintaining older V6.3 projects.
 - Read `references/protocol-v6-2.md` only when maintaining older V6.2 projects.
@@ -38,13 +40,15 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
 - Use `scripts/` utilities when available:
   - `probe_palette.py` for safe chroma-key color selection.
   - `chroma_key.py` for color-preserving transparent asset cleanup.
-  - `slice_grid.py` for icon/contact-sheet extraction from generated icon sheets.
-  - `layout_guard.py` for source_bbox/fraction/font-size contract checks.
+  - `slice_grid.py` for `--auto` icon extraction, `--components` optional frame-part extraction, contact sheets, and edge-touch checks.
+  - `layout_guard.py` for source_bbox/fraction/font-size/bold checks and optional coordinate fixes.
+  - `compose_pptx.py` for standard PPTX generation and PNG previews from layout/deck JSON.
+  - `frame_parts_to_icons.py` only when the user explicitly asks for movable frame parts.
   - `placement_qa.py` for source/preview bbox overlays.
   - `visual_compare_qa.py` for side-by-side, blend, and diff heatmap QA.
   - `pptx_editability_lint.py` for PPTX ZIP/XML, shrink-to-fit, and tiny-font checks.
 
-## V6.5 Workflow
+## V6.6 Workflow
 
 1. Create a unique task directory:
    - `image2pptx_runs/<timestamp>_<slug>/`
@@ -71,16 +75,20 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
    - classify the asset as scientific illustration, dashboard/flywheel base, glow/texture, atomic object, or clean background
    - write reverse prompts that include required sub-elements, relative placement, empty overlay zones, and target background
    - list every icon, art-word, decorative mark, tiny symbol, badge, and meaningful line icon that must be independently movable or copyable
+   - choose one reconstruction mode per page: `hybrid_mode` by default, `native_structure_mode` for simple editable shapes/tables, or `frame_layer_mode` for dense high-fidelity consulting pages
 6. Generate or clean visual assets:
    - assets must contain **no text, no labels, no arrows, no numbers, no tables, no legends, no logo, no watermark**
    - assets must match the reference structure, not only the reference topic
    - preserve 3D depth, glow, gradient, micro-texture, medical illustration quality, and composition
    - reject assets that contain text-like marks or low-quality simplified geometry
+   - when using imagegen/image generation from a source slide, first make the current source image visible as the edit target, then record prompt files and generated paths in `imagegen-assets-manifest.json`
 7. Run Icon Extraction Pass:
    - use supplied icons/SVGs when available
    - otherwise generate or clean text-free transparent PNG icon assets
    - record every icon in `icon_extraction_plan.json` with `source_bbox`, final file, and placement status
-   - if using an icon sheet, run chroma-key cleanup, slice to components, and inspect the contact sheet
+   - if using an icon sheet, run `chroma_key.py --preset icon-safe --scale 2`, slice with `slice_grid.py --auto --pad 24 --contact-sheet`, and inspect the contact sheet
+   - if using an image-generated frame layer, run `chroma_key.py --preset frame-safe --scale 2`; keep full-frame `frame.png` by default
+   - split `frame.png` into `frame_parts/` only when the user explicitly asks for movable frame components, then convert with `frame_parts_to_icons.py`
    - fail QA if an icon is missing, clipped, merged with another icon, too small, duplicated, or not independently selectable/copyable
 8. Run Background Integration Pass:
    - isolated objects such as liposomes/vials must use transparent or alpha-matted backgrounds
@@ -93,6 +101,7 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
    - place visual assets as locked/image base components
    - overlay all titles, labels, numbers, arrows, tables, bullets, legends, insight cards, and conclusions as editable PPT objects
    - rebuild simple cards, borders, table grids, badges, and connectors as native PPT shapes
+   - use `compose_pptx.py` when the page has a layout/deck JSON compatible with the standard layered model
    - for every text/icon/asset, store `source_bbox` in source-image pixels and `x/y/w/h` in fraction coordinates
    - calculate text size from source pixel height: `pt = source_text_height_px * slide_height_in * 72 / ref_height`
 10. Run Topology + Hierarchy Pass:
@@ -103,10 +112,11 @@ Use Image2 / image generation / image cleanup for **visual assets only**, not fo
    - do not shrink premium visuals into small cards
    - avoid overly regular internal-training style layouts when the reference has a high-end consulting/medical-conference look
 11. Run Engineering QA Pass:
-   - run coordinate/font checks before rendering
+   - run `layout_guard.py --strict` before rendering
    - render preview and generate source/preview placement overlays
    - generate side-by-side, blend, and diff heatmap QA images
    - lint the PPTX package for ZIP/XML validity, `normAutofit`, and unexpectedly small explicit font runs
+   - verify `imagegen-assets-manifest.json` when generated image layers are used
    - correct text scale before correcting text position
    - correct icon size/center before correcting surrounding text
    - run frame-anchor calibration for text attached to generated or image-based frames
@@ -175,6 +185,12 @@ Use PPT shapes for:
 
 Do not use native shapes to approximate complex scientific art when that would visibly lower the page quality.
 
+## Reconstruction Modes
+
+- `hybrid_mode` is the default: complex/premium visuals can be image assets, simple containers and business semantics stay editable.
+- `native_structure_mode` is for simple business pages where PPT shapes, tables, connectors, and text can faithfully recreate the source without losing visual quality.
+- `frame_layer_mode` is for dense high-fidelity pages where many frames, fills, glows, decorative dividers, and chart skeletons would drift if rebuilt one by one. Use a text-free transparent frame layer plus editable text/icons. Do not use this to bake business text, numbers, labels, or tables.
+
 ## Hard Rules
 
 - Do not generate a complete slide image and then split it into PPT pieces.
@@ -193,6 +209,9 @@ Do not use native shapes to approximate complex scientific art when that would v
 - Do not accept text that is visibly smaller than the reference. Fix font size using the source-pixel-height formula before moving boxes.
 - Do not deliver without at least one preview-to-reference placement QA pass for pages with dense icons or labels.
 - Do not deliver a PPTX that requires PowerPoint repair or relies on unexpected shrink-to-fit for normal body text.
+- Do not claim imagegen-based extraction unless `imagegen-assets-manifest.json` records backend, prompt file, generated source, and copied output for each generated layer.
+- Do not call imagegen on a slide image by merely writing a local path in the prompt; first load/view the actual source image as the current edit target.
+- Do not split a frame layer into movable parts unless the user explicitly asks for frame parts to be individually movable; keep full-frame layers intact by default.
 - If a visual base cannot be generated cleanly, explicitly mark the fallback in the reports.
 
 ## Prompt Contract For Visual Assets
@@ -231,7 +250,7 @@ Then overlay all semantics in PPT.
 
 ## QA Gates
 
-Fail V6.5 QA if any is true:
+Fail V6.6 QA if any is true:
 
 - a full slide is a screenshot
 - a large module is a raw crop with baked business content
@@ -245,6 +264,9 @@ Fail V6.5 QA if any is true:
 - editable business text is missing for titles, labels, tables, chart labels, source notes, or conclusion bars
 - scientific visuals are cropped, distorted, or non-uniformly scaled
 - first-read hierarchy is weaker than the reference
+- imagegen layer evidence is missing for generated backgrounds, frame layers, or icon sheets
+- `compose_pptx.py` preview was not generated when using the standard layered layout path
+- icon sheet contact sheets show clipped, merged, or edge-touching icons without correction
 
 ## Delivery Report
 
@@ -259,6 +281,7 @@ In the final response, include:
 - editable text count
 - source_bbox coverage count
 - visual asset count
+- generated-layer manifest status
 - independently movable/copyable icon count
 - native shape count
 - whether the PPTX reopened/validated
@@ -270,11 +293,11 @@ In the final response, include:
 ## One-Sentence Principle
 
 ```text
-V6.5 preserves topology, then uses engineering QA to keep icons copyable, text at source scale, and layout aligned.
+V6.6 preserves topology, then uses a repeatable execution engine to keep icons copyable, text at source scale, generated layers evidenced, and layout aligned.
 ```
 
 Chinese:
 
 ```text
-V6.5 不只是规定怎么重建，还要用坐标守卫、图标切片、摆放标注和视觉 diff 把“更像原图”落到可检查流程里。
+V6.6 不只是规定怎么重建，还把合成器、抠图、切片、证据链和 QA 门禁标准化，让“更像原图”变成可复跑流程。
 ```
