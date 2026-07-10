@@ -6,22 +6,18 @@ SKN Image2PPT 是一个专门解决 **Image2 / AI 生图结果无法直接转成
 
 很多 Image2、GPT 生图、PPT 截图或海报生成工具可以产出视觉效果很好的页面图片，但这些图片通常只是 PNG/JPEG：文字不能编辑，数字不能更新，表格、图标、标签和图表都被烘焙进像素里。直接把整张图贴进 PowerPoint 只能保留外观，不能满足后续修改；如果把所有元素都强行用 PPT 原生形状重画，又容易损失原图质感。
 
-SKN Image2PPT V6.6 的核心思想是 **拓扑保真 + 执行引擎 QA 的高保真混合重建**：
+SKN Image2PPT V6.5 的核心思想是 **拓扑保真 + 工程化 QA 的高保真混合重建**：
 
 ```text
 RUN_ROOT 任务隔离
 +
 source_bbox 坐标契约
 +
-imagegen edit-target 证据链
-+
 大模块结构化重建 / 高保真无字视觉底座
 +
 核心业务内容可编辑重建
 +
 图标可复制、可移动、可校验
-+
-标准 compose_pptx 合成器
 +
 字号按源图像素高度计算
 +
@@ -49,11 +45,11 @@ SKN Image2PPT 不追求“所有像素都可编辑”，而是按元素类型决
 | Logo、纹理、插画、照片 | 高保真图片或 SVG 资产 |
 | 背景光效、波浪 | 透明 PNG / SVG / 干净背景资产 |
 
-V6.6 明确禁止把大模块直接裁成图片来冒充重构，也针对实际测试中常见的问题增加硬门禁：图标不能复制、文字比原图小、排版错位、imagegen 没有证据链、PPTX 生成代码临时拼凑。每个文本/图标/资产都必须记录源图像素级 `source_bbox`，再换算成 PPT 坐标；使用生成式背景/框架/图标层时，还必须记录 `imagegen-assets-manifest.json`。
+V6.5 明确禁止把大模块直接裁成图片来冒充重构，也针对实际测试中常见的三个问题增加硬门禁：图标不能复制、文字比原图小、排版错位。每个文本/图标/资产都必须记录源图像素级 `source_bbox`，再换算成 PPT 坐标。
 
 ### SVM 语义视觉模块
 
-SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂模块。当前版本沿用 SVM 的核心判断：SVM 不是“裁图 fallback”，而是四种明确模式：
+SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂模块。V6.2 中 SVM 不是“裁图 fallback”，而是四种明确模式：
 
 - `SVM_NATIVE`：表格、卡片组、流程、飞轮、证据阶梯等用 PPT 形状和可编辑文本重建。
 - `SVM_CLEAN_BASE_PLUS_OVERLAY`：细胞、脂质体、肿瘤组织等复杂科学图只保留无文字底图，上层箭头、标签、编号全部可编辑。
@@ -65,15 +61,9 @@ SVM 用于飞轮、地图、漏斗、机制图、复杂 timeline 等视觉复杂
 - 整页截图，完全不可编辑。
 - 全部用 PPT shape 重画，视觉质量明显下降。
 
-### V6.6 三种重建模式
+### Engineering QA + Polish Pass
 
-- `hybrid_mode`：默认模式。复杂视觉资产保留质感，业务文本/数字/标签可编辑，简单结构尽量用 PPT 原生对象。
-- `native_structure_mode`：适合简单页面，优先用 PPT shapes、表格、连接线重建，最大化编辑性。
-- `frame_layer_mode`：适合高密度咨询页或复杂框架页，把无文字框架、卡片底座、分隔线、辉光和图表骨架做成透明 `frame.png`，再叠加可编辑文本和独立图标。不要用它烘焙业务文本。
-
-### Execution QA + Polish Pass
-
-V6.6 的 Polish Pass 前先做 Execution QA，不只处理小脏点，还要检查页面层级、比例、编号、图标系统、字号、坐标和生成证据：
+V6.5 的 Polish Pass 前先做 Engineering QA，不只处理小脏点，还要检查页面层级、比例、编号、图标系统、字号和坐标：
 
 - 文字重影或底图文字残留
 - 重复线条、重复圆点、重复图标
@@ -87,10 +77,6 @@ V6.6 的 Polish Pass 前先做 Execution QA，不只处理小脏点，还要检�
 - 图标没有独立对象，无法复制/移动
 - 文本字号来自缩略图坐标，导致比原图小
 - `source_bbox` 和 `x/y/w/h` 坐标系不一致
-- imagegen 只收到路径文字，没有当前源图作为 edit target
-- 背景/框架/图标层缺少 `imagegen-assets-manifest.json`
-- 图标表没有 contact sheet，切片缺边或粘连没有被发现
-- 没有用 `compose_pptx.py` 生成可复查预览
 - 预览图和源图没有 placement overlay / diff 对比
 
 Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原图，但最终交付前必须隐藏或删除参考层。
@@ -99,7 +85,7 @@ Polish Pass 可以临时使用 30%-50% 透明度的 reference overlay 对照原�
 
 如果需要生成或清理组件图片、去文字背景、生成透明图标、生成 SVM 科学视觉底图，优先使用可明确指定模型的 OpenAI Images API，而不是依赖不透明的内置生图工具。
 
-V6.6 允许对脂质体、细胞结构、肿瘤组织、药物释放等大科学图做“反向拆解成 prompt 再生成”，但生成结果只能作为 **无文字视觉底座**；所有标签、箭头、数字、证据说明、结论必须回到 PPT 可编辑对象。
+V6.2 允许对脂质体、细胞结构、肿瘤组织、药物释放等大科学图做“反向拆解成 prompt 再生成”，但生成结果只能作为 **无文字视觉底座**；所有标签、箭头、数字、证据说明、结论必须回到 PPT 可编辑对象。
 
 当前建议配置：
 
@@ -135,7 +121,6 @@ project_slug/
       topology_lock.json
       visual_element_ledger.json
       icon_extraction_plan.json
-      imagegen-assets-manifest.json
       manifest.json
       layout_v6.json
       asset_metadata.json
@@ -152,7 +137,6 @@ project_slug/
       side_by_side.png
       blend.png
       diff_overlay.png
-      imagegen-assets-manifest.json
       engineering_qa_report.json
       polish_report.md
       quality_report.md
@@ -161,17 +145,14 @@ project_slug/
 ### 示例 Prompt
 
 ```text
-使用 skn-image2ppt V6.6，把这张参考图转换成高保真、可编辑的 PPTX。
+使用 skn-image2ppt V6.5，把这张参考图转换成高保真、可编辑的 PPTX。
 标题、数字、标签、要点、表格和图表标签必须保持可编辑。
 大模块必须结构化重建；不要直接裁成局部大图使用。
-根据页面复杂度选择 hybrid_mode / native_structure_mode / frame_layer_mode。
 每个文本、图标和资产都记录 source_bbox；字号按源图实际像素高度换算，避免文字变小。
 图标必须尽量独立成可复制/可移动对象；生成 icon_extraction_plan.json。
-如果使用 imagegen 生成背景、框架或图标层，先把当前源图作为 edit target，并记录 imagegen-assets-manifest.json。
 脂质体、细胞结构等复杂科学图可以反向拆解成 prompt，生成无文字视觉底座，再叠加可编辑标签、箭头和说明。
 如需生成或清理组件图片，优先使用 image_model_config.example.json 中定义的 OpenAI Images API 模型策略。
-标准 layered layout 优先使用 compose_pptx.py 生成 PPTX 和预览图。
-生成后执行 Execution QA：layout guard、placement overlay、visual diff、pptx lint、frame-anchor calibration，再执行 Polish Pass。
+生成后执行 Engineering QA：layout guard、placement overlay、visual diff、frame-anchor calibration，再执行 Polish Pass。
 输出 PPTX、资产文件夹、layout JSON、预览图、side-by-side、diff overlay、engineering QA report 和 polish report。
 ```
 
@@ -194,7 +175,7 @@ SKN Image2PPT uses a hybrid reconstruction approach:
 - Layout and asset decisions are recorded in manifest/layout metadata.
 - A final Polish Pass removes visible defects such as ghosting, duplicated lines, alignment drift, inconsistent icons, and hard-edged image assets.
 - Generated assets use an explicit image model policy when OpenAI Images API access is available.
-- V6.6 adds a repeatable execution engine: standard composition, stronger chroma-key cleanup, stronger slicing, imagegen evidence, source coordinate contracts, icon extraction, font sizing, placement overlays, visual diff, and PPTX lint.
+- V6.5 adds engineering QA for source coordinate contracts, icon extraction, font sizing, placement overlays, and visual diff.
 
 ## Image Model Policy
 
